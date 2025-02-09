@@ -2,14 +2,15 @@ package com.music.service.service;
 
 import com.music.service.factory.MusicServiceFactory;
 import com.music.service.factory.SpotifyServiceFactory;
-import com.music.service.model.Album;
 import com.music.service.model.Artist;
+import com.music.service.model.Song;
 import com.music.service.strategy.PlaylistProcessor;
 import com.music.service.strategy.SpotifyPlaylistProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class SongProcessor {
 
@@ -22,16 +23,20 @@ public class SongProcessor {
         PlaylistProcessor processor = new SpotifyPlaylistProcessor(factory);
         MusicService service = new MusicService(processor);
 
-        List<Album> albums = service.processAlbums();
-        List<Artist> artists = service.processArtist();
+        List<Song> songs = service.processSong();
 
-        for (Album album: albums) {
-            LOGGER.info(" - {} - {} - {} - {} - {}", album.getId(), album.getName(),
-                    album.getReleaseDate(), album.getTotalTrack(), album.getType());
-        }
+        for (Song song: songs) {
+            //Artistas
+            List<String> artistNames = song.getArtists().stream()
+                            .map(Artist::getName)
+                            .collect(Collectors.toList());
+            String artists = String.join(", ", artistNames);
 
-        for (Artist artist: artists) {
-            LOGGER.info(" - {} - {}", artist.getId(), artist.getName());
+            LOGGER.info(" - Id: {} - Canción: {} - Artista(s): {} - Album: {}",
+                    song.getId(),
+                    song.getName(),
+                    artists,
+                    song.getAlbum().getName());
         }
     }
 }

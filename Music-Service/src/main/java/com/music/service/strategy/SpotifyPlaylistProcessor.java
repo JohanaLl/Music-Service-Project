@@ -3,15 +3,16 @@ package com.music.service.strategy;
 import com.music.service.factory.MusicServiceFactory;
 import com.music.service.model.Album;
 import com.music.service.model.Artist;
+import com.music.service.model.Song;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 public class SpotifyPlaylistProcessor implements PlaylistProcessor {
 
+    //Factory que crea los objetos
     private final MusicServiceFactory factory;
 
     public SpotifyPlaylistProcessor(MusicServiceFactory factory) {
@@ -19,29 +20,32 @@ public class SpotifyPlaylistProcessor implements PlaylistProcessor {
     }
 
     @Override
-    public List<Album> processAlbums(JSONObject data) {
-        List<Album> albums = new ArrayList<>();
-        JSONArray items = (JSONArray) data.get("album");
-
-        for (Object item : items) {
-            JSONObject albumData = (JSONObject) item;
-            Album album = factory.createAlbum(albumData);
-            albums.add(album);
-        }
-
-        return albums;
-    }
-
-    @Override
-    public List<Artist> processArtist(JSONObject data) {
-        List<Artist> artists = new ArrayList<>();
-        JSONArray items = (JSONArray) data.get("artists");
+    public List<Song> processSong(JSONObject data) {
+        List<Song> songs = new ArrayList<>();
+        JSONArray items = (JSONArray) data.get("items");
 
         for (Object item: items) {
-            JSONObject artistData = (JSONObject) item;
-            Artist artist = factory.createArtist(artistData);
-            artists.add(artist);
+            JSONObject songJson = (JSONObject) item;
+            JSONObject trackJson = (JSONObject) songJson.get("track");
+            JSONObject albumJson = (JSONObject) trackJson.get("album");
+            JSONArray artistsJson = (JSONArray) trackJson.get("artists");
+
+            //Create Album
+            Album album = factory.createAlbum(albumJson);
+
+            //Create Artists list
+            List<Artist> artists = new ArrayList<>();
+            for (Object artist: artistsJson) {
+                JSONObject artistJson = (JSONObject) artist;
+                artists.addAll(factory.createArtist(artistJson));
+            }
+
+            //Create Song
+            Song song = factory.createSong(trackJson);
+            song.setAlbum(album);
+            song.setArtists(artists);
+            songs.add(song);
         }
-        return Collections.emptyList();
+        return songs;
     }
 }
