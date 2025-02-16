@@ -39,3 +39,12 @@ Esta implementación facilita añadir nuevos servicios sin modificar el código 
 
 ![image](https://github.com/user-attachments/assets/d2b541c4-b388-4017-89e0-59d873e220f9)
 
+Adicionalmente, se identifican vulnerabilidades con el uso de json-simple, por lo tanto se implemnta el uso de Jackson, esto mejora
+
+El rendimiento, la eficiencia y la fexibilidad en el manejo de datos.
+
+#### Vulnerabilidad
+
+![image](https://github.com/user-attachments/assets/9ef53d06-3f29-44ea-8278-efd0f8450b1a)
+
+
