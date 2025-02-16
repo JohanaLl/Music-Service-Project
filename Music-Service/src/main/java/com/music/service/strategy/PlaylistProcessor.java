@@ -1,12 +1,12 @@
 package com.music.service.strategy;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.music.service.model.Song;
-import org.json.simple.JSONObject;
 
 import java.util.List;
 
 public interface PlaylistProcessor {
 
-    List<Song> processSong(JSONObject data);
+    List<Song> processSong(JsonNode data);
 
 }

@@ -1,18 +1,20 @@
 package com.music.service.utils;
 
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.net.URL;
+import java.util.Optional;
 
 /**
  * Clase -utilitaria para manejo de archivos y recusros JSON
  */
 public class ExampleFileUtils {
+
+    private static final ObjectMapper mapper = new ObjectMapper();
 
     /**
      * Leer y convertir un archivo JSON a un JSONObject
@@ -20,14 +22,19 @@ public class ExampleFileUtils {
      * @return un Optional contiene el parsed JSONObject, o empty si el parsing falla
      * @throws IllegalArgumentException si el inputSource es null o no existe
      */
-    public static JSONObject getJsonFromFile(File inputSource) {
-        JSONParser parser = new JSONParser();
+    public static JsonNode getJsonFromFile(File inputSource) {
+
         try {
-            return (JSONObject) parser.parse(new FileReader(inputSource));
-        } catch (IOException | ParseException e) {
-            e.printStackTrace();
+            return switch (inputSource) {
+                case File f when f.exists() && f.isFile() -> mapper.readTree(f);
+                case null ->
+                    throw new IllegalArgumentException("Input source cannot be null");
+                default ->
+                    throw new IllegalArgumentException("Invalid input source");
+            };
+        } catch (IOException e) {
+            throw new UncheckedIOException("Error reading JSON file", e);
         }
-        return null;
     }
 
     /**
@@ -37,13 +44,11 @@ public class ExampleFileUtils {
      * @throws IllegalArgumentException si el archivo no puede ser encontrado
      */
     public static File getFileFromResources(String fileName) {
-        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 
-        URL resource = classLoader.getResource(fileName);
-        if (resource != null) {
-            return new File(resource.getFile());
-        } else {
-            throw new IllegalArgumentException("Missing file");
-        }
+        return Optional.ofNullable(fileName)
+                .map(Thread.currentThread().getContextClassLoader()::getResource)
+                .map(URL::getFile)
+                .map(File::new)
+                .orElseThrow(() -> new IllegalArgumentException("File not found: " + fileName));
     }
 }

@@ -14,14 +14,20 @@ public class PropertyFactory {
     private static final String CONFIG_FILE = "config.properties";
 
     static {
-        properties = new Properties();
+        properties = loadProperties();
+    }
 
-        try (InputStream inputStream = PropertyFactory.class.getClassLoader().getResourceAsStream(CONFIG_FILE)) {
-            properties.load(inputStream);
-        } catch (IOException e) {
-            LOGGER.error("ERROR while reading the configuration file: {}", e.getMessage());
-            e.printStackTrace();
+    private static Properties loadProperties() {
+        var props = new Properties();
+        try (var inputStream = PropertyFactory.class.getClassLoader()
+                .getResourceAsStream(CONFIG_FILE)){
+            if (inputStream instanceof InputStream is) {
+                props.load(is);
+            }
+        } catch (Exception e) {
+            LOGGER.error("Error loading properties: {}", e.getMessage(), e);
         }
+        return props;
     }
 
     public static Properties getProperties(){

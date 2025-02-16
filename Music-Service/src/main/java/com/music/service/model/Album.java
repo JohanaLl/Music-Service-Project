@@ -1,9 +1,9 @@
 package com.music.service.model;
 
-public interface Album {
-    public String getId();
-    public String getName();
-    public String getReleaseDate();
-    public int getTotalTrack();
-    public String getType();
-}
+public record Album (
+        String id,
+        String name,
+        String releaseDate,
+        int totalTrack,
+        String type
+){ }

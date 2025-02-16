@@ -1,14 +1,12 @@
 package com.music.service.strategy;
 
 import com.music.service.factory.MusicServiceFactory;
-import com.music.service.model.Album;
-import com.music.service.model.Artist;
 import com.music.service.model.Song;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
+import com.fasterxml.jackson.databind.JsonNode;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.StreamSupport;
 
 public class SpotifyPlaylistProcessor implements PlaylistProcessor {
 
@@ -20,32 +18,27 @@ public class SpotifyPlaylistProcessor implements PlaylistProcessor {
     }
 
     @Override
-    public List<Song> processSong(JSONObject data) {
-        List<Song> songs = new ArrayList<>();
-        JSONArray items = (JSONArray) data.get("items");
+    public List<Song> processSong(JsonNode data) {
+        return Optional.ofNullable(data.get("items"))
+                .map(items -> StreamSupport.stream(items.spliterator(), false)
+                        .map(this::processTrack)
+                        .toList())
+                .orElse(List.of());
+    }
 
-        for (Object item: items) {
-            JSONObject songJson = (JSONObject) item;
-            JSONObject trackJson = (JSONObject) songJson.get("track");
-            JSONObject albumJson = (JSONObject) trackJson.get("album");
-            JSONArray artistsJson = (JSONArray) trackJson.get("artists");
+    private Song processTrack(JsonNode songJson) {
+        var trackJson = songJson.get("track");
+        var albumJson = trackJson.get("album");
+        var artistsJson = trackJson.get("artists");
 
-            //Create Album
-            Album album = factory.createAlbum(albumJson);
+        //Create Album
+        var album = factory.createAlbum(albumJson);
 
-            //Create Artists list
-            List<Artist> artists = new ArrayList<>();
-            for (Object artist: artistsJson) {
-                JSONObject artistJson = (JSONObject) artist;
-                artists.addAll(factory.createArtist(artistJson));
-            }
+        //Create Artists list
+        var artists = StreamSupport.stream(artistsJson.spliterator(), false)
+                .flatMap(artist -> factory.createArtist(artist).stream())
+                .toList();
 
-            //Create Song
-            Song song = factory.createSong(trackJson);
-            song.setAlbum(album);
-            song.setArtists(artists);
-            songs.add(song);
-        }
-        return songs;
+        return  factory.createSong(trackJson, album, artists);
     }
 }
